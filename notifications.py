@@ -60,7 +60,7 @@ def main():
             st.warning("No data matches the selected filters.")
     
     else:
-st.info("Please upload an Excel file.")
+        st.info("Please upload an Excel file.")
  
 if __name__ == "__main__":
     main()
