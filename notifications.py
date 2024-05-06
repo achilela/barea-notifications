@@ -64,27 +64,3 @@ st.info("Please upload an Excel file.")
  
 if __name__ == "__main__":
     main()
-
-        # Sidebar filters
-        st.sidebar.title("Filters")
-        selected_names = st.sidebar.multiselect("Select Name", data['Name'].unique())
-        selected_colors = st.sidebar.multiselect("Select Color", data['Color'].unique())
-
-        # Apply filters
-        filtered_data = data[
-            (data['Name'].isin(selected_names)) &
-            (data['Color'].isin(selected_colors))
-        ]
-
-        # Display filtered results
-        st.subheader("Filtered Data")
-        st.dataframe(filtered_data)
-
-        # Calculate and display totals
-        st.subheader("Totals")
-        st.write(f"Total rows: {len(filtered_data)}")
-        st.write(f"Total unique names: {len(filtered_data['Name'].unique())}")
-        st.write(f"Total unique colors: {len(filtered_data['Color'].unique())}")
-
-if __name__ == "__main__":
-    main()
