@@ -13,39 +13,44 @@
 # limitations under the License.
 
 import streamlit as st
-from streamlit.logger import get_logger
+import pandas as pd
 
-LOGGER = get_logger(__name__)
+# Load sample data (you can replace this with your own Excel file)
+sample_data = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    'Color': ['red', 'blue', 'blue', 'black', 'green']
+})
 
+def main():
+    st.title("Excel Data Filter App")
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+    # Upload Excel file
+    uploaded_file = st.file_uploader("Upload an Excel file", type=["xls", "xlsx"])
 
-    st.write("# Welcome to Streamlit! 👋")
+    if uploaded_file:
+        # Read data from the uploaded file
+        data = pd.read_excel(uploaded_file)
 
-    st.sidebar.success("Select a demo above.")
+        # Sidebar filters
+        st.sidebar.title("Filters")
+        selected_names = st.sidebar.multiselect("Select Name", data['Name'].unique())
+        selected_colors = st.sidebar.multiselect("Select Color", data['Color'].unique())
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+        # Apply filters
+        filtered_data = data[
+            (data['Name'].isin(selected_names)) &
+            (data['Color'].isin(selected_colors))
+        ]
 
+        # Display filtered results
+        st.subheader("Filtered Data")
+        st.dataframe(filtered_data)
+
+        # Calculate and display totals
+        st.subheader("Totals")
+        st.write(f"Total rows: {len(filtered_data)}")
+        st.write(f"Total unique names: {len(filtered_data['Name'].unique())}")
+        st.write(f"Total unique colors: {len(filtered_data['Color'].unique())}")
 
 if __name__ == "__main__":
-    run()
+    main()
