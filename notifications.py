@@ -17,66 +17,55 @@ import pandas as pd
 from openpyxl import load_workbook
  
 def main():
-    st.title("Excel Table Filtering App")
+    st.title("Excel Data Filtering App")
     
     # File upload
     uploaded_file = st.sidebar.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
     
     if uploaded_file is not None:
         # Load the workbook
-        wb = load_workbook(uploaded_file)
-        sheet_name = wb.sheetnames[0]  # Assume the table is in the first sheet
+        wb = load_workbook(uploaded_file, data_only=True)
+        sheet_name = "Sheet1"  # Assume the data is in "Sheet1"
         ws = wb[sheet_name]
         
-        # Find the table range
-        table_range = None
-        for cell in ws["A"]:
-            if cell.value == "Table1":  # Assuming the table has a name "Table1"
-                table_range = ws[cell.row+1:ws.max_row]
-                break
+        # Extract data into a DataFrame
+        data = ws.values
+        columns = next(data)
+        df = pd.DataFrame(data, columns=columns)
         
-        if table_range:
-            # Extract table data into a DataFrame
-            data = []
-            for row in table_range:
-                data.append([cell.value for cell in row])
-            df = pd.DataFrame(data[1:], columns=data[0])
+        # Get unique values for each column
+        unique_values = {}
+        for column in df.columns:
+            unique_values[column] = df[column].unique()
+        
+        # Multiselect filters
+        selected_filters = {}
+        for column, values in unique_values.items():
+            selected_values = st.sidebar.multiselect(f"Select {column}", values)
+            if selected_values:
+                selected_filters[column] = selected_values
+        
+        # Filter DataFrame based on selected filters
+        if selected_filters:
+            filter_conditions = []
+            for column, values in selected_filters.items():
+                filter_conditions.append(df[column].isin(values))
             
-            # Get unique values for each column
-            unique_values = {}
-            for column in df.columns:
-                unique_values[column] = df[column].unique()
-            
-            # Multiselect filters
-            selected_filters = {}
-            for column, values in unique_values.items():
-                selected_values = st.sidebar.multiselect(f"Select {column}", values)
-                if selected_values:
-                    selected_filters[column] = selected_values
-            
-            # Filter DataFrame based on selected filters
-            if selected_filters:
-                filter_conditions = []
-                for column, values in selected_filters.items():
-                    filter_conditions.append(df[column].isin(values))
-                
-                filtered_df = df[pd.concat(filter_conditions, axis=1).all(axis=1)]
-            else:
-                filtered_df = df
-            
-            # Display filtered results in a table
-            if not filtered_df.empty:
-                st.subheader("Filtered Results")
-                st.table(filtered_df)
-                
-                # Display totals
-                totals = filtered_df.sum(numeric_only=True)
-                st.subheader("Totals")
-                st.table(totals)
-            else:
-                st.warning("No data matches the selected filters.")
+            filtered_df = df[pd.concat(filter_conditions, axis=1).all(axis=1)]
         else:
-            st.warning("No table found in the Excel file.")
+            filtered_df = df
+        
+        # Display filtered results in a table
+        if not filtered_df.empty:
+            st.subheader("Filtered Results")
+            st.table(filtered_df)
+            
+            # Display totals
+            totals = filtered_df.sum(numeric_only=True)
+            st.subheader("Totals")
+            st.table(totals)
+        else:
+            st.warning("No data matches the selected filters.")
     
     else:
         st.info("Please upload an Excel file.")
