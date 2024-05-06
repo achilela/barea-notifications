@@ -14,22 +14,56 @@
 
 import streamlit as st
 import pandas as pd
-
-# Load sample data (you can replace this with your own Excel file)
-sample_data = pd.DataFrame({
-    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
-    'Color': ['red', 'blue', 'blue', 'black', 'green']
-})
-
+ 
 def main():
-    st.title("Excel Data Filter App")
-
-    # Upload Excel file
-    uploaded_file = st.file_uploader("Upload an Excel file", type=["xls", "xlsx"])
-
-    if uploaded_file:
-        # Read data from the uploaded file
-        data = pd.read_excel(uploaded_file)
+    st.title("Excel File Filtering App")
+    
+    # File upload
+    uploaded_file = st.sidebar.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
+    
+    if uploaded_file is not None:
+        # Read Excel file into a DataFrame
+        df = pd.read_excel(uploaded_file)
+        
+        # Get unique values for each column
+        unique_values = {}
+        for column in df.columns:
+            unique_values[column] = df[column].unique()
+        
+        # Multiselect filters
+        selected_filters = {}
+        for column, values in unique_values.items():
+            selected_values = st.sidebar.multiselect(f"Select {column}", values)
+            if selected_values:
+                selected_filters[column] = selected_values
+        
+        # Filter DataFrame based on selected filters
+        if selected_filters:
+            filter_conditions = []
+            for column, values in selected_filters.items():
+                filter_conditions.append(df[column].isin(values))
+            
+            filtered_df = df[pd.concat(filter_conditions, axis=1).all(axis=1)]
+        else:
+            filtered_df = df
+        
+        # Display filtered results in a table
+        if not filtered_df.empty:
+            st.subheader("Filtered Results")
+            st.table(filtered_df)
+            
+            # Display totals
+            totals = filtered_df.sum(numeric_only=True)
+            st.subheader("Totals")
+            st.table(totals)
+        else:
+            st.warning("No data matches the selected filters.")
+    
+    else:
+st.info("Please upload an Excel file.")
+ 
+if __name__ == "__main__":
+    main()
 
         # Sidebar filters
         st.sidebar.title("Filters")
